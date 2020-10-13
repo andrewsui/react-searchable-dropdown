@@ -1,0 +1,4 @@
+.select-country-option:hover {
+    cursor: pointer;
+    background-color: #cccccc;
+}
