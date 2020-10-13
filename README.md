@@ -9,6 +9,3 @@ i.e.
 - `user-id=2` for [standard user](https://andrewsui.github.io/react-searchable-dropdown/?user-id=2)
 
 Admin users have "Add" button displayed if search input does not retrieve any matches, whereas standard users do not.
-
-## Source code
-Source code available [here](https://github.com/andrewsui/react-searchable-dropdown/tree/master/source-code).
