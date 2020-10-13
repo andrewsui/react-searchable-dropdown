@@ -8,6 +8,17 @@ export default function SelectCountry() {
     // Set max number of countries initially displayed in list
     const maxDisplay = 4;
 
+    // useState variables and setters
+    const [countries, setCountries] = useState([]);
+    const [searchInput, setSearchInput] = useState('');
+    const [extraCountriesCount, setExtraCountriesCount] = useState(0);
+    const [displayAllToggle, setDisplayAllToggle] = useState(false);
+    const [countryExistsInDb, setCountryExistsInDb] = useState(true);
+
+    // useRef variables
+    const searchElementRef = useRef();
+    const isUserAdminRef = useRef();
+
     // Function to compare alphabetical order of countries from returned results
     const compare = (a,b) => a.value > b.value ? 1 : -1;
 
@@ -33,7 +44,8 @@ export default function SelectCountry() {
             timeout = setTimeout(later, wait);
         };
     };
-    
+
+    // Function to get matching countries using debounce
     let getCountries = debounce(() => {
         fetch('json/countries.json')
         .then(response => response.json())
@@ -45,17 +57,6 @@ export default function SelectCountry() {
         });
     }, 300);
 
-    // useState variables and setters
-    const [countries, setCountries] = useState([]);
-    const [searchInput, setSearchInput] = useState('');
-    const [extraCountriesCount, setExtraCountriesCount] = useState(0);
-    const [displayAllToggle, setDisplayAllToggle] = useState(false);
-    const [countryExistsInDb, setCountryExistsInDb] = useState(true);
-
-    // useRef variables
-    const searchElementRef = useRef();
-    const isUserAdminRef = useRef();
-
     // Get countries list from JSON to simulate database for test purposes only
     useEffect(getCountries, [searchInput, displayAllToggle]);
 
@@ -66,6 +67,7 @@ export default function SelectCountry() {
         .then(data => {
             const filterUser = data.filter(user => user.id===userId);
             isUserAdminRef.current = filterUser[0].isAdmin;
+            searchElementRef.current.focus(); // On page load, focus on search box
         });
     });
 
@@ -75,6 +77,7 @@ export default function SelectCountry() {
             <input
                 ref={searchElementRef}
                 type="text"
+                id="search-input"
                 name="searchInput"
                 value={searchInput}
                 placeholder="Search..."
@@ -84,28 +87,32 @@ export default function SelectCountry() {
             {isUserAdminRef.current && !countryExistsInDb ? <button>Add</button> : null}
 
             {/* Filtered search options */}
-            {countries.map(country => {
-                return (
-                    <option
-                        key={`country-${country.id}`}
-                        onClick={e => {
-                            // When country option is selected, populate search input text box with selected country
-                            setSearchInput(e.target.value);
-                            // Focus on search input text box
-                            searchElementRef.current.focus();
-                        }}
-                        name={country.id}
-                        value={country.value}
-                        className="select-country-option"
-                    >
-                        {country.display}
-                    </option>
-                )
-            })}
-            {extraCountriesCount>=0 ? <button onClick={() => setDisplayAllToggle(!displayAllToggle)}>{displayAllToggle ? "Hide..." : `${extraCountriesCount} more...`}</button> : null}
-
-            {/* If user is admin and country does not exist in database, show message */}
-            <p>{isUserAdminRef.current && !countryExistsInDb ? "Couldn't find a match, would you like to add this country?" : null}</p>
+            <div className="select-country-container">
+                {countries.map(country => {
+                    return (
+                        <option
+                            key={`country-${country.id}`}
+                            onClick={e => {
+                                // When country option is selected, populate search input text box with selected country
+                                setSearchInput(e.target.value);
+                                // Focus on search input text box
+                                searchElementRef.current.focus();
+                            }}
+                            name="country"
+                            data={country.id}
+                            value={country.value}
+                            className="select-country-option"
+                        >
+                            {country.display}
+                        </option>
+                    )
+                })}
+                {extraCountriesCount>0 ? <option className="more-countries" onClick={() => setDisplayAllToggle(!displayAllToggle)}>{displayAllToggle ? "Hide..." : `${extraCountriesCount} more...`}</option> : null}
+            </div>
+            
+            {/* If country does not exist in database, show message */}
+            {isUserAdminRef.current && !countryExistsInDb ? <p>Couldn't find a match, would you like to add this country?</p> : null}
+            {!isUserAdminRef.current && !countryExistsInDb ? <p>Sorry, couldn't find any countries that match.</p> : null}
         </React.Fragment>
     );
 }
